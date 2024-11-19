@@ -1,15 +1,14 @@
 import streamlit as st
+import pandas as pd
 import os
 import kaggle
 import tempfile
-import pandas as pd
-from sklearn.preprocessing import LabelEncoder, MinMaxScaler
+
+st.title("Input Data")
 
 # Mengakses kredensial dari Streamlit Secrets
 os.environ['KAGGLE_USERNAME'] = st.secrets["kaggle_json"]["username"]
 os.environ['KAGGLE_KEY'] = st.secrets["kaggle_json"]["key"]
-
-st.title("Input Data")
 
 # Pilihan metode input
 input_method = st.radio("Pilih metode input data:", ("Unggah file CSV", "Nama dataset Kaggle"))
@@ -30,19 +29,24 @@ elif input_method == "Nama dataset Kaggle":
 
     if st.button("Unduh dataset"):
         if kaggle_username and kaggle_dataset:
-            # Autentikasi dengan API Kaggle
-            kaggle.api.authenticate()
+            try:
+                # Autentikasi dengan API Kaggle
+                kaggle.api.authenticate()
+                st.success("Autentikasi dengan Kaggle berhasil!")
 
-            # Menggunakan direktori sementara untuk menyimpan file CSV sementara
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                kaggle.api.dataset_download_files(f"{kaggle_username}/{kaggle_dataset}", path=tmp_dir, unzip=True)
+                # Menggunakan direktori sementara untuk menyimpan file CSV sementara
+                with tempfile.TemporaryDirectory() as tmp_dir:
+                    kaggle.api.dataset_download_files(f"{kaggle_username}/{kaggle_dataset}", path=tmp_dir, unzip=True)
 
-                # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
-                for file in os.listdir(tmp_dir):
-                    if file.endswith(".csv"):
-                        data = pd.read_csv(f"{tmp_dir}/{file}")
-                        st.session_state.data = data
-                        break
+                    # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
+                    for file in os.listdir(tmp_dir):
+                        if file.endswith(".csv"):
+                            data = pd.read_csv(f"{tmp_dir}/{file}")
+                            st.session_state.data = data
+                            break
+                st.success("Dataset berhasil diunduh dan dimuat.")
+            except Exception as e:
+                st.error(f"Gagal mengunduh dataset dari Kaggle: {e}")
 
 # Menampilkan data jika sudah diunggah atau diunduh
 if 'data' in st.session_state:
@@ -50,8 +54,8 @@ if 'data' in st.session_state:
 
     # Preprocessing Data
     st.subheader("Preprocessing Data")
-    label_encoder = LabelEncoder()
     if 'Heart Disease' in st.session_state.data.columns:
+        label_encoder = LabelEncoder()
         st.session_state.data['Heart Disease'] = label_encoder.fit_transform(st.session_state.data['Heart Disease'])
 
     # Pilihan untuk Normalisasi
