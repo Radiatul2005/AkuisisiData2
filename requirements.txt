@@ -4,5 +4,3 @@ matplotlib
 plotly
 seaborn
 scikit-learn
-kaggle
-os
