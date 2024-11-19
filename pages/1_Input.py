@@ -7,7 +7,7 @@ import os
 
 # Setel variabel lingkungan untuk mengarah ke direktori tempat menyimpan file kaggle.json
 # Gantilah '/path/to/your/kaggle.json/directory' dengan path yang sesuai dengan lokasi file kaggle.json Anda
-os.environ['KAGGLE_CONFIG_DIR'] = '/path/to/your/kaggle.json/directory'
+os.environ['KAGGLE_CONFIG_DIR'] = 'C:/Users/acerA/.kaggle'
 
 st.title("Input Data")
 
