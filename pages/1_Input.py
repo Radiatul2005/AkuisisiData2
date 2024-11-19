@@ -6,6 +6,21 @@ import tempfile
 import json
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
+# Mendapatkan kredensial dari Streamlit secrets
+username = st.secrets["kaggle_json"]["username"]
+key = st.secrets["kaggle_json"]["key"]
+
+# Set variabel lingkungan
+os.environ["KAGGLE_USERNAME"] = username
+os.environ["KAGGLE_KEY"] = key
+
+# Verifikasi bahwa variabel lingkungan sudah terisi dengan benar
+st.write("Kaggle Username:", os.getenv("KAGGLE_USERNAME"))
+st.write("Kaggle Key:", os.getenv("KAGGLE_KEY"))
+
+# Autentikasi dengan API Kaggle
+kaggle.api.authenticate()
+
 st.title("Input Data")
 
 # Pilihan metode input
