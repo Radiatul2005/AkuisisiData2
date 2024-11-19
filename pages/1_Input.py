@@ -5,9 +5,16 @@ import kaggle
 import tempfile
 import os
 
-# Setel variabel lingkungan untuk mengarah ke direktori tempat menyimpan file kaggle.json
-# Gantilah '/path/to/your/kaggle.json/directory' dengan path yang sesuai dengan lokasi file kaggle.json Anda
-os.environ['KAGGLE_CONFIG_DIR'] = 'C:/Users/acerA/.kaggle'
+# Pastikan kredensial Kaggle diambil dari Streamlit Secrets
+try:
+    os.environ['KAGGLE_USERNAME'] = st.secrets["KAGGLE_USERNAME"]
+    os.environ['KAGGLE_KEY'] = st.secrets["KAGGLE_KEY"]
+    
+    # Verifikasi autentikasi
+    kaggle.api.authenticate()
+    st.write("Autentikasi Kaggle berhasil!")
+except Exception as e:
+    st.error(f"Autentikasi Kaggle gagal: {e}")
 
 st.title("Input Data")
 
@@ -30,19 +37,19 @@ elif input_method == "Nama dataset Kaggle":
 
     if st.button("Unduh dataset"):
         if kaggle_username and kaggle_dataset:
-            # Autentikasi dengan API Kaggle
-            kaggle.api.authenticate()
-            
-            # Menggunakan direktori sementara untuk menyimpan file CSV sementara
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                kaggle.api.dataset_download_files(f"{kaggle_username}/{kaggle_dataset}", path=tmp_dir, unzip=True)
+            try:
+                # Menggunakan direktori sementara untuk menyimpan file CSV sementara
+                with tempfile.TemporaryDirectory() as tmp_dir:
+                    kaggle.api.dataset_download_files(f"{kaggle_username}/{kaggle_dataset}", path=tmp_dir, unzip=True)
 
-                # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
-                for file in os.listdir(tmp_dir):
-                    if file.endswith(".csv"):
-                        data = pd.read_csv(f"{tmp_dir}/{file}")
-                        st.session_state.data = data
-                        break
+                    # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
+                    for file in os.listdir(tmp_dir):
+                        if file.endswith(".csv"):
+                            data = pd.read_csv(f"{tmp_dir}/{file}")
+                            st.session_state.data = data
+                            break
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat mengunduh dataset: {e}")
 
 # Menampilkan data jika sudah diunggah atau diunduh
 if 'data' in st.session_state:
