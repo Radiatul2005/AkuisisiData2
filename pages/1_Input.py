@@ -37,6 +37,10 @@ elif input_method == "Nama dataset Kaggle":
                 os.environ["KAGGLE_USERNAME"] = username
                 os.environ["KAGGLE_KEY"] = key
 
+                # Debug: Menampilkan nilai username dan key yang digunakan
+                st.write(f"API Username: {username}")
+                st.write(f"API Key: {key}")
+
                 # Autentikasi dengan API Kaggle
                 kaggle.api.authenticate()
 
