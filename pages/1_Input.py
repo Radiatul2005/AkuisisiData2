@@ -26,19 +26,22 @@ elif input_method == "Nama dataset Kaggle":
 
     if st.button("Unduh dataset"):
         if kaggle_username and kaggle_dataset:
-            # Autentikasi dengan API Kaggle
-            kaggle.api.authenticate()
-            
-            # Menggunakan direktori sementara untuk menyimpan file CSV sementara
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                kaggle.api.dataset_download_files(f"{kaggle_username}/{kaggle_dataset}", path=tmp_dir, unzip=True)
+            try:
+                # Autentikasi dengan API Kaggle
+                kaggle.api.authenticate()
+                
+                # Menggunakan direktori sementara untuk menyimpan file CSV sementara
+                with tempfile.TemporaryDirectory() as tmp_dir:
+                    kaggle.api.dataset_download_files(f"{kaggle_username}/{kaggle_dataset}", path=tmp_dir, unzip=True)
 
-                # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
-                for file in os.listdir(tmp_dir):
-                    if file.endswith(".csv"):
-                        data = pd.read_csv(f"{tmp_dir}/{file}")
-                        st.session_state.data = data
-                        break
+                    # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
+                    for file in os.listdir(tmp_dir):
+                        if file.endswith(".csv"):
+                            data = pd.read_csv(f"{tmp_dir}/{file}")
+                            st.session_state.data = data
+                            break
+            except Exception as e:
+                st.error(f"Terjadi kesalahan saat mengunduh dataset Kaggle: {e}")
 
 # Menampilkan data jika sudah diunggah atau diunduh
 if 'data' in st.session_state:
@@ -61,10 +64,17 @@ if 'data' in st.session_state:
         st.session_state.data[cols_to_normalize] = scaler.fit_transform(st.session_state.data[cols_to_normalize])
         st.write("Data setelah normalisasi:", st.session_state.data.head())
 
+    # Menangani nilai NaN
     if st.session_state.data.isnull().sum().any():
-        st.warning("Data mengandung nilai NaN. Melakukan pembersihan data.")
-        st.session_state.data = st.session_state.data.dropna()
-        st.write("Data setelah pembersihan NaN:", st.session_state.data.head())
+        st.warning("Data mengandung nilai NaN. Pilih bagaimana cara menangani data kosong:")
+        nan_handling_option = st.radio("Pilih cara menangani NaN:", ("Hapus baris yang mengandung NaN", "Isi NaN dengan nilai rata-rata"))
+        
+        if nan_handling_option == "Hapus baris yang mengandung NaN":
+            st.session_state.data = st.session_state.data.dropna()
+            st.write("Data setelah pembersihan NaN:", st.session_state.data.head())
+        elif nan_handling_option == "Isi NaN dengan nilai rata-rata":
+            st.session_state.data.fillna(st.session_state.data.mean(), inplace=True)
+            st.write("Data setelah mengisi NaN dengan rata-rata:", st.session_state.data.head())
 
     st.subheader("Data setelah Preprocessing")
     st.dataframe(st.session_state.data)
