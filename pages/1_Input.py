@@ -14,8 +14,8 @@ if kaggle_json is None:
     st.error("File kaggle.json tidak ditemukan di Streamlit Secrets. Pastikan kamu sudah menambahkannya.")
 else:
     # Menyimpan kaggle.json ke direktori yang sesuai
-    os.makedirs("C:\Users\acerA\.kaggle", exist_ok=True)
-    with open("C:\Users\acerA\.kaggle/kaggle.json", "w") as f:
+    os.makedirs("C:\\Users\\acerA\\.kaggle", exist_ok=True)
+    with open("C:\\Users\\acerA\\.kaggle\\kaggle.json", "w") as f:
         json.dump(kaggle_json, f)
 
     # Pilihan metode input
