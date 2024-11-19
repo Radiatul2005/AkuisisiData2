@@ -4,6 +4,7 @@ import os
 import kaggle
 import tempfile
 import json
+from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 
 st.title("Input Data")
 
@@ -22,23 +23,23 @@ if input_method == "Unggah file CSV":
 # Jika metode input adalah Kaggle
 elif input_method == "Nama dataset Kaggle":
     kaggle_username = st.text_input("Masukkan nama/username Kaggle dataset:")
-    kaggle_dataset = st.text_input("Masukkan nama dataset Kaggle (contoh: 'dataset-name'):")
+    kaggle_dataset = st.text_input("Masukkan nama dataset Kaggle (contoh: 'dataset-name'):") 
 
     if st.button("Unduh dataset"):
         if kaggle_username and kaggle_dataset:
-            # Mengambil API key dari secrets Streamlit
-            kaggle_json = st.secrets["kaggle_json"]
-            # Menyimpan file kaggle.json sementara
-            with tempfile.NamedTemporaryFile(delete=False) as tmpfile:
-                json.dump(kaggle_json, tmpfile)
-                tmpfile.close()
+            try:
+                # Mengambil API key dari secrets Streamlit
+                kaggle_json = st.secrets["kaggle_json"]
+                username = kaggle_json["username"]
+                key = kaggle_json["key"]
 
                 # Set lingkungan API Kaggle
-                os.environ['KAGGLE_CONFIG_DIR'] = os.path.dirname(tmpfile.name)
-            
-            # Autentikasi dengan API Kaggle
-            try:
+                os.environ["KAGGLE_USERNAME"] = username
+                os.environ["KAGGLE_KEY"] = key
+
+                # Autentikasi dengan API Kaggle
                 kaggle.api.authenticate()
+
                 # Menggunakan direktori sementara untuk menyimpan file CSV
                 with tempfile.TemporaryDirectory() as tmp_dir:
                     kaggle.api.dataset_download_files(f"{kaggle_username}/{kaggle_dataset}", path=tmp_dir, unzip=True)
