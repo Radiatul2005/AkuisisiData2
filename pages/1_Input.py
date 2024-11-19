@@ -8,23 +8,28 @@ import json
 
 st.title("Input Data")
 
-# Pastikan kaggle.json ada di secrets
+# Tentukan direktori .kaggle untuk Windows atau Linux
+if os.name == 'nt':  # Windows
+    kaggle_dir = os.path.join(os.getenv('USERPROFILE'), '.kaggle')
+else:  # Linux atau Streamlit Cloud
+    kaggle_dir = os.path.expanduser("~/.kaggle")
+
+# Pastikan direktori .kaggle ada
+os.makedirs(kaggle_dir, exist_ok=True)
+
+# Mengambil file kaggle.json dari Streamlit Secrets
 kaggle_json = st.secrets.get("kaggle")
+
 if kaggle_json is None:
     st.error("File kaggle.json tidak ditemukan di Streamlit Secrets. Pastikan kamu sudah menambahkannya.")
 else:
-    # Tentukan direktori .kaggle untuk Windows
-    if os.name == 'nt':  # Windows
-        kaggle_dir = os.path.join(os.getenv('USERPROFILE'), '.kaggle')  # C:\\Users\\[username]\\.kaggle
-    else:  # Linux atau Streamlit Cloud
-        kaggle_dir = os.path.expanduser("~/.kaggle")
-
-    # Membuat direktori .kaggle jika belum ada
-    os.makedirs(kaggle_dir, exist_ok=True)
-
-    # Menyimpan kaggle.json ke direktori yang sesuai
-    with open(os.path.join(kaggle_dir, "kaggle.json"), "w") as f:
-        json.dump(kaggle_json, f)
+    # Menyimpan file kaggle.json ke direktori yang sesuai
+    try:
+        with open(os.path.join(kaggle_dir, "kaggle.json"), "w") as f:
+            json.dump(kaggle_json, f)
+        st.success(f"File kaggle.json berhasil disalin ke: {kaggle_dir}")
+    except Exception as e:
+        st.error(f"Terjadi kesalahan saat menyalin kaggle.json: {e}")
 
     # Pilihan metode input
     input_method = st.radio("Pilih metode input data:", ("Unggah file CSV", "Nama dataset Kaggle"))
@@ -48,6 +53,7 @@ else:
                 try:
                     # Autentikasi dengan API Kaggle
                     kaggle.api.authenticate()
+                    st.success("Autentikasi API Kaggle berhasil!")
                     
                     # Menggunakan direktori sementara untuk menyimpan file CSV sementara
                     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -58,6 +64,7 @@ else:
                             if file.endswith(".csv"):
                                 data = pd.read_csv(f"{tmp_dir}/{file}")
                                 st.session_state.data = data
+                                st.success("Dataset berhasil diunduh!")
                                 break
                 except Exception as e:
                     st.error(f"Terjadi kesalahan saat mengunduh dataset Kaggle: {e}")
