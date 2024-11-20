@@ -36,7 +36,7 @@ elif input_method == "Nama dataset Kaggle":
                     }
                 else:
                     # Jika lokal, gunakan file kaggle.json
-                    kaggle_json_path = r"C:\Users\acerA\.kaggle\kaggle.json"  # Sesuaikan lokasi
+                    kaggle_json_path = r"C:\Users\acerA\.kaggle"  # Sesuaikan lokasi
                     with open(kaggle_json_path, "r") as f:
                         kaggle_json = json.load(f)
 
