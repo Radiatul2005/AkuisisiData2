@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder, MinMaxScaler
-import kaggle
+from kaggle.api.kaggle_api_extended import KaggleApi
 import tempfile
 import os
 
@@ -21,22 +21,26 @@ if input_method == "Unggah file CSV":
 
 # Jika metode input adalah Kaggle
 elif input_method == "Nama dataset Kaggle":
-    kaggle_username = st.secrets["kaggle"]["username"]
-    kaggle_key = st.secrets["kaggle"]["key"]
-    kaggle.api.authenticate(kaggle_username, kaggle_key)
-
     dataset_name = st.text_input("Masukkan nama dataset Kaggle (contoh: 'username/dataset-name'):")
 
     if st.button("Unduh dataset"):
         if dataset_name:
+            # Autentikasi dengan Secrets
+            kaggle_username = st.secrets["kaggle"]["username"]
+            kaggle_key = st.secrets["kaggle"]["key"]
+
+            # Membuat objek API Kaggle
+            api = KaggleApi()
+            api.authenticate()
+
             # Gunakan direktori sementara untuk menyimpan file CSV sementara
             with tempfile.TemporaryDirectory() as tmp_dir:
-                kaggle.api.dataset_download_files(dataset_name, path=tmp_dir, unzip=True)
+                api.dataset_download_files(dataset_name, path=tmp_dir, unzip=True)
 
                 # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
                 for file in os.listdir(tmp_dir):
                     if file.endswith(".csv"):
-                        data = pd.read_csv(f"{tmp_dir}/{file}")
+                        data = pd.read_csv(os.path.join(tmp_dir, file))
                         st.session_state.data = data
                         break
 
