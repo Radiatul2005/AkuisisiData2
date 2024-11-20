@@ -27,20 +27,20 @@ elif input_method == "Nama dataset Kaggle":
     if st.button("Unduh dataset"):
         if dataset_name:
             try:
-                # Cek apakah aplikasi berjalan di Streamlit Cloud
+                # Cek apakah aplikasi berjalan di Streamlit Cloud atau lokal
                 if hasattr(st.secrets, "kaggle"):
-                    # Streamlit Cloud: Gunakan Secrets
+                    # Jika menggunakan Streamlit Cloud, gunakan Secrets
                     kaggle_json = {
                         "username": st.secrets["kaggle"]["username"],
                         "key": st.secrets["kaggle"]["key"]
                     }
                 else:
-                    # Lokal: Gunakan file kaggle.json dari lokasi manual
-                    kaggle_json_path = r"C:\Users\acerA\.kaggle\kaggle.json"  # Ganti sesuai lokasi Anda
+                    # Jika lokal, gunakan file kaggle.json
+                    kaggle_json_path = r"C:\Users\acerA\.kaggle\kaggle.json"  # Sesuaikan lokasi
                     with open(kaggle_json_path, "r") as f:
                         kaggle_json = json.load(f)
 
-                # Simpan file kaggle.json ke lokasi default yang dikenali oleh API Kaggle
+                # Tentukan lokasi .kaggle dan pastikan file kaggle.json ada di sana
                 kaggle_dir = os.path.join(os.path.expanduser("~"), ".kaggle")
                 os.makedirs(kaggle_dir, exist_ok=True)
                 kaggle_file = os.path.join(kaggle_dir, "kaggle.json")
@@ -49,14 +49,23 @@ elif input_method == "Nama dataset Kaggle":
                     json.dump(kaggle_json, f)
 
                 # Set permission file untuk keamanan (khusus Linux/MacOS)
-                os.chmod(kaggle_file, 0o600)
+                if os.name != 'nt':  # Non-Windows
+                    os.chmod(kaggle_file, 0o600)
 
-                # Membuat objek API Kaggle dan autentikasi
+                st.write(f"File kaggle.json telah disimpan di: {kaggle_file}")
+                if os.path.exists(kaggle_file):
+                    st.write("File kaggle.json ditemukan dan siap digunakan.")
+                else:
+                    st.error("File kaggle.json tidak ditemukan di lokasi yang diharapkan.")
+
+                # Autentikasi dengan API Kaggle
                 api = KaggleApi()
                 api.authenticate()
+                st.success("Autentikasi Kaggle berhasil.")
 
                 # Unduh dataset ke direktori sementara
                 with tempfile.TemporaryDirectory() as tmp_dir:
+                    st.write(f"Mengunduh dataset ke direktori sementara: {tmp_dir}")
                     api.dataset_download_files(dataset_name, path=tmp_dir, unzip=True)
 
                     # Cari file CSV dalam direktori sementara
