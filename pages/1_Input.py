@@ -26,37 +26,40 @@ elif input_method == "Nama dataset Kaggle":
 
     if st.button("Unduh dataset"):
         if dataset_name:
-            # Cek apakah aplikasi berjalan di lokal atau Streamlit Cloud
-            if hasattr(st.secrets, "kaggle"):
-                # Gunakan Streamlit Secrets untuk autentikasi (Streamlit Cloud)
-                kaggle_json = {
-                    "username": st.secrets["kaggle"]["username"],
-                    "key": st.secrets["kaggle"]["key"]
-                }
+            try:
+                # Cek apakah aplikasi berjalan di Streamlit Cloud
+                if hasattr(st.secrets, "kaggle"):
+                    # Streamlit Cloud: Gunakan Secrets
+                    kaggle_json = {
+                        "username": st.secrets["kaggle"]["username"],
+                        "key": st.secrets["kaggle"]["key"]
+                    }
+                else:
+                    # Lokal: Gunakan file kaggle.json dari lokasi manual
+                    kaggle_json_path = r"C:\Users\acerA\.kaggle\kaggle.json"  # Ganti sesuai lokasi Anda
+                    with open(kaggle_json_path, "r") as f:
+                        kaggle_json = json.load(f)
 
-                # Simpan file kaggle.json ke direktori sementara
-                kaggle_dir = os.path.join(os.path.expand("~"), ".kaggle")
+                # Simpan file kaggle.json ke lokasi default yang dikenali oleh API Kaggle
+                kaggle_dir = os.path.join(os.path.expanduser("~"), ".kaggle")
                 os.makedirs(kaggle_dir, exist_ok=True)
                 kaggle_file = os.path.join(kaggle_dir, "kaggle.json")
 
                 with open(kaggle_file, "w") as f:
                     json.dump(kaggle_json, f)
 
-                # Set permission file untuk keamanan
+                # Set permission file untuk keamanan (khusus Linux/MacOS)
                 os.chmod(kaggle_file, 0o600)
-            else:
-                # Jika berjalan lokal, set lokasi manual file kaggle.json
-                os.environ["KAGGLE_CONFIG_DIR"] = r"C:\Users\acerA\.kaggle\kaggle.json"
 
-            # Membuat objek API Kaggle
-            api = KaggleApi()
-            try:
+                # Membuat objek API Kaggle dan autentikasi
+                api = KaggleApi()
                 api.authenticate()
-                # Gunakan direktori sementara untuk menyimpan file CSV sementara
+
+                # Unduh dataset ke direktori sementara
                 with tempfile.TemporaryDirectory() as tmp_dir:
                     api.dataset_download_files(dataset_name, path=tmp_dir, unzip=True)
 
-                    # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
+                    # Cari file CSV dalam direktori sementara
                     for file in os.listdir(tmp_dir):
                         if file.endswith(".csv"):
                             data = pd.read_csv(os.path.join(tmp_dir, file))
