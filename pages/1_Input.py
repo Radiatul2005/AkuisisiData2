@@ -102,5 +102,8 @@ if 'data' in st.session_state:
         st.session_state.data = st.session_state.data.dropna()
         st.write("Data setelah pembersihan NaN:", st.session_state.data.head())
 
+    # Menyimpan data yang telah diproses ke session state
+    st.session_state.preprocessed_data = st.session_state.data
+
     st.subheader("Data setelah Preprocessing")
     st.dataframe(st.session_state.data)
