@@ -35,7 +35,7 @@ elif input_method == "Nama dataset Kaggle":
                 }
 
                 # Simpan file kaggle.json ke direktori sementara
-                kaggle_dir = os.path.join(os.path.expanduser("~"), ".kaggle")
+                kaggle_dir = os.path.join(os.path.expand("~"), ".kaggle")
                 os.makedirs(kaggle_dir, exist_ok=True)
                 kaggle_file = os.path.join(kaggle_dir, "kaggle.json")
 
@@ -46,7 +46,7 @@ elif input_method == "Nama dataset Kaggle":
                 os.chmod(kaggle_file, 0o600)
             else:
                 # Jika berjalan lokal, set lokasi manual file kaggle.json
-                os.environ["KAGGLE_CONFIG_DIR"] = r"C:\Users\acerA\.kaggle"
+                os.environ["KAGGLE_CONFIG_DIR"] = r"C:\Users\acerA\.kaggle\kaggle.json"
 
             # Membuat objek API Kaggle
             api = KaggleApi()
