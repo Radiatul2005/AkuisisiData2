@@ -4,6 +4,7 @@ from sklearn.preprocessing import LabelEncoder, MinMaxScaler
 from kaggle.api.kaggle_api_extended import KaggleApi
 import tempfile
 import os
+import json
 
 st.title("Input Data")
 
@@ -25,24 +26,47 @@ elif input_method == "Nama dataset Kaggle":
 
     if st.button("Unduh dataset"):
         if dataset_name:
-            # Autentikasi dengan Secrets
-            kaggle_username = st.secrets["kaggle"]["username"]
-            kaggle_key = st.secrets["kaggle"]["key"]
+            # Cek apakah aplikasi berjalan di lokal atau Streamlit Cloud
+            if hasattr(st.secrets, "kaggle"):
+                # Gunakan Streamlit Secrets untuk autentikasi (Streamlit Cloud)
+                kaggle_json = {
+                    "username": st.secrets["kaggle"]["username"],
+                    "key": st.secrets["kaggle"]["key"]
+                }
+
+                # Simpan file kaggle.json ke direktori sementara
+                kaggle_dir = os.path.join(os.path.expanduser("~"), ".kaggle")
+                os.makedirs(kaggle_dir, exist_ok=True)
+                kaggle_file = os.path.join(kaggle_dir, "kaggle.json")
+
+                with open(kaggle_file, "w") as f:
+                    json.dump(kaggle_json, f)
+
+                # Set permission file untuk keamanan
+                os.chmod(kaggle_file, 0o600)
+            else:
+                # Jika berjalan lokal, set lokasi manual file kaggle.json
+                os.environ["KAGGLE_CONFIG_DIR"] = r"C:\Users\acerA\.kaggle"
 
             # Membuat objek API Kaggle
             api = KaggleApi()
-            api.authenticate()
+            try:
+                api.authenticate()
+                # Gunakan direktori sementara untuk menyimpan file CSV sementara
+                with tempfile.TemporaryDirectory() as tmp_dir:
+                    api.dataset_download_files(dataset_name, path=tmp_dir, unzip=True)
 
-            # Gunakan direktori sementara untuk menyimpan file CSV sementara
-            with tempfile.TemporaryDirectory() as tmp_dir:
-                api.dataset_download_files(dataset_name, path=tmp_dir, unzip=True)
-
-                # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
-                for file in os.listdir(tmp_dir):
-                    if file.endswith(".csv"):
-                        data = pd.read_csv(os.path.join(tmp_dir, file))
-                        st.session_state.data = data
-                        break
+                    # Cari file CSV dalam direktori sementara dan memuat ke dalam DataFrame
+                    for file in os.listdir(tmp_dir):
+                        if file.endswith(".csv"):
+                            data = pd.read_csv(os.path.join(tmp_dir, file))
+                            st.session_state.data = data
+                            st.success("Dataset berhasil diunduh dan dimuat.")
+                            break
+                    else:
+                        st.error("Tidak ada file CSV ditemukan dalam dataset Kaggle.")
+            except Exception as e:
+                st.error(f"Error autentikasi atau unduhan Kaggle: {e}")
 
 # Menampilkan data jika sudah diunggah atau diunduh
 if 'data' in st.session_state:
@@ -65,6 +89,7 @@ if 'data' in st.session_state:
         st.session_state.data[cols_to_normalize] = scaler.fit_transform(st.session_state.data[cols_to_normalize])
         st.write("Data setelah normalisasi:", st.session_state.data.head())
 
+    # Pembersihan NaN
     if st.session_state.data.isnull().sum().any():
         st.warning("Data mengandung nilai NaN. Melakukan pembersihan data.")
         st.session_state.data = st.session_state.data.dropna()
