@@ -5,12 +5,17 @@ from sklearn.ensemble import RandomForestClassifier
 
 st.title("Analisis Data")
 
+# Cek apakah data sudah diproses sebelumnya dan ada di session_state
 if 'preprocessed_data' in st.session_state and st.session_state.preprocessed_data is not None:
-        data = st.session_state.preprocessed_data
+    data = st.session_state.preprocessed_data
 
+    # Cek apakah kolom target ada (misalnya 'Heart Disease')
+    if 'Heart Disease' not in data.columns:
+        st.error("'Heart Disease' tidak ditemukan dalam data.")
+    else:
         # Pisahkan fitur (X) dan label (y)
-        X = data.drop(columns=['Heart Disease'])  # Pastikan Heart Disease tidak ada
-        y = data['Heart Disease']  # Label target
+        X = data.drop(columns=['Heart Disease'])
+        y = data['Heart Disease']
 
         # Cek jika ada NaN di y (label), dan tangani
         if y.isnull().any():
@@ -61,7 +66,7 @@ if 'preprocessed_data' in st.session_state and st.session_state.preprocessed_dat
             "num_vessels": num_vessels,
             "thallium": thallium
         }
-        
+
         # Memastikan semua input diisi
         if all(v is not None for v in input_data.values()):
             # Mapping input ke nilai numerik
@@ -90,7 +95,7 @@ if 'preprocessed_data' in st.session_state and st.session_state.preprocessed_dat
             if st.button("Tambahkan Data Baru"):
                 # Menambahkan data baru ke session state
                 st.session_state.preprocessed_data = pd.concat([data, user_data], ignore_index=True)
-                
+
                 # Menampilkan data setelah penambahan baris baru dengan scrollable table
                 st.write("Data Setelah Input Baru:")
                 st.dataframe(st.session_state.preprocessed_data, use_container_width=True)  # Menampilkan data terbaru dengan scroll
@@ -103,4 +108,4 @@ if 'preprocessed_data' in st.session_state and st.session_state.preprocessed_dat
         else:
             st.warning("Harap lengkapi semua kolom input sebelum menambahkan data baru.")
 else:
-        st.write("Belum ada data yang diproses")
+    st.write("Belum ada data yang diproses atau data belum diunggah.")
