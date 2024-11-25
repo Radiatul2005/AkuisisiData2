@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
 
 st.title("Analisis Data")
 
@@ -10,7 +11,7 @@ if 'preprocessed_data' in st.session_state and st.session_state.preprocessed_dat
     data = st.session_state.preprocessed_data
 
     # Pisahkan fitur (X) dan label (y)
-    X = data.drop(columns=['Heart Disease'])  # Pastikan Heart Disease tidak ada
+    X = data.drop(columns=['Heart Disease'])  # Pastikan 'Heart Disease' tidak ada
     y = data['Heart Disease']  # Label target
 
     # Cek jika ada NaN di y (label), dan tangani
@@ -25,6 +26,14 @@ if 'preprocessed_data' in st.session_state and st.session_state.preprocessed_dat
     # Inisialisasi dan latih model Random Forest
     model = RandomForestClassifier(random_state=42)
     model.fit(X_train, y_train)
+
+    # Hitung akurasi model pada data uji
+    y_pred = model.predict(X_test)
+    accuracy = accuracy_score(y_test, y_pred)
+
+    # Tampilkan akurasi di antarmuka Streamlit
+    st.subheader("Akurasi Model")
+    st.write(f"Akurasi pada data uji: **{accuracy:.2%}**")
 
     # Simpan model di session state
     st.session_state.model = model
